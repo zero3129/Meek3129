@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="我已经在虚拟机中安装了 OpenWrt 路由器系统。">
+<meta property="og:title" content="Zerotier、OpenWRT">
+<meta property="og:description" content="我已经在虚拟机中安装了 OpenWrt 路由器系统。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://zero3129.github.io/Meek3129/post/Zerotier%E3%80%81OpenWRT.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>Zerotier、OpenWRT</title>
+
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Zerotier、OpenWRT</h1>
+<div class="title-right">
+    <a href="https://zero3129.github.io/Meek3129" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/zero3129/Meek3129/issues/6" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><p>我已经在虚拟机中安装了 OpenWrt 路由器系统。现在，我希望在这台 OpenWrt 实例上安装并配置 ZeroTier，创建一个虚拟局域网（VLAN），以实现以下目标：<br>
+<strong>1. ZeroTier 网络连接：</strong> 外部设备通过 ZeroTier 加入虚拟局域网后，可以访问 OpenWrt 路由器本身（例如通过 SSH 或 Web 界面）。</p>
+<p><strong>2. LAN 访问：</strong> 外部设备能够访问与 OpenWrt 虚拟机位于同一物理局域网（LAN 网段，192.168.31.0/24）内的其他设备。</p>
+<p><strong>3. 网络通信：</strong> 确保 ZeroTier 网络和物理 LAN 之间的双向通信正常工作。</p>
+<p>请提供详细的步骤和配置指南，包括但不限于以下内容：</p>
+<p>• 在 OpenWrt 上安装 ZeroTier 的具体命令和步骤。</p>
+<p>• 配置 ZeroTier 网络接口以加入指定的 ZeroTier 网络（假设我已有一个 ZeroTier 网络 ID）。</p>
+<p>• 配置 OpenWrt 防火墙规则，确保 ZeroTier 客户端能够访问 OpenWrt 路由器和物理 LAN 中的设备，同时保持网络安全。</p>
+<p>• 任何必要的路由规则（例如静态路由）以确保流量正确转发。</p>
+<p>• 可选：验证配置是否成功的测试步骤或命令。</p>
+<p>请假设：</p>
+<p>• OpenWrt 虚拟机运行在类似 VMware 或 VirtualBox 的环境中，连接到一个物理 LAN 网段（例如 192.168.31.0/24）。</p>
+<p>• 我对 OpenWrt 的命令行界面（LuCI 或 SSH）有基本了解。</p>
+<p>• ZeroTier 网络已经创建，并有一个有效的网络 ID 可供使用。</p>
+<p>请以清晰、按步骤组织的格式提供答案，并包括必要的命令、配置文件内容或 LuCI 配置截图说明。如果有潜在的常见问题或注意事项，也请指出。</p>
+<hr>
+<h2>详细步骤与配置指南</h2>
+<h3>假设前提：</h3>
+<ul>
+<li>OpenWrt 虚拟机（如 VMware、VirtualBox）已安装并运行，网络连接到物理 LAN 网段 <code class="notranslate">192.168.31.0/24</code>。</li>
+<li>您拥有 OpenWrt 的 LuCI Web 界面或 SSH 访问权限。</li>
+<li>您已在 ZeroTier Central 创建了一个网络，并拥有其 <strong>网络 ID (Network ID)</strong>。</li>
+</ul>
+<hr>
+<h3>步骤 1：在 OpenWrt 上安装 ZeroTier</h3>
+<ol>
+<li>
+<p><strong>通过 SSH 或 LuCI -&gt; 系统 -&gt; 软件包 (Software) 连接到您的 OpenWrt 路由器。</strong></p>
+</li>
+<li>
+<p>**更新软件包列表：**Bash</p>
+<pre class="notranslate"><code class="notranslate">opkg update
+</code></pre>
+</li>
+<li>
+<p>**安装 ZeroTier 软件包：**Bash</p>
+<pre class="notranslate"><code class="notranslate">opkg install zerotier
+</code></pre>
+</li>
+<li>
+<p>**启动 ZeroTier 服务并使其开机自启：**Bash</p>
+<pre class="notranslate"><code class="notranslate">/etc/init.d/zerotier enable
+/etc/init.d/zerotier start
+</code></pre>
+</li>
+</ol>
+<hr>
+<h3>步骤 2：配置 ZeroTier 网络</h3>
+<ol>
+<li>
+<p><strong>加入您的 ZeroTier 网络：</strong> 将 <code class="notranslate">&lt;YOUR_NETWORK_ID&gt;</code>替换为您的实际 ZeroTier 网络 ID。</p>
+<p>Bash</p>
+<pre class="notranslate"><code class="notranslate">zerotier-cli join &lt;YOUR_NETWORK_ID&gt;
+</code></pre>
+<p>执行后，它会显示类似 <code class="notranslate">200 join OK</code> 的信息。</p>
+</li>
+<li>
+<p><strong>在 ZeroTier Central 授权 OpenWrt 设备：</strong></p>
+<ul>
+<li>登录到 <code class="notranslate">my.zerotier.com</code>。</li>
+<li>进入您的网络。</li>
+<li>在 "Members" 部分，您会看到一个新的未知设备（其地址是在 OpenWrt 上执行 <code class="notranslate">zerotier-cli info</code> 可以看到的 <code class="notranslate">address</code>）。</li>
+<li>勾选 "Auth?" 列下的复选框以授权该设备。</li>
+<li>（可选但推荐）给这个设备一个易于识别的名称（例如 <code class="notranslate">OpenWrt-VM</code>）。</li>
+<li>记下 ZeroTier Central 分配给 OpenWrt 设备的 IP 地址（例如 <code class="notranslate">10.x.x.x</code>）。</li>
+</ul>
+</li>
+<li>
+<p><strong>在 ZeroTier Central 配置 Managed Route (托管路由)：</strong> 这是关键步骤，允许 ZeroTier 网络中的其他设备访问您的物理 LAN (<code class="notranslate">192.168.31.0/24</code>)。</p>
+<ul>
+<li>在 ZeroTier Central 的网络设置页面，找到 "Managed Routes" 部分。</li>
+<li>添加一条新路由：
+<ul>
+<li><strong>Destination (目标网络):</strong> <code class="notranslate">192.168.31.0/24</code></li>
+<li><strong>(Via) (下一跳):</strong> <code class="notranslate">&lt;OpenWrt_ZeroTier_IP&gt;</code> (这是上一步中 ZeroTier Central 分配给 OpenWrt 设备的 IP 地址)</li>
+</ul>
+</li>
+<li>点击 "Submit"。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3>步骤 3：配置 OpenWrt 网络接口</h3>
+<p>ZeroTier 安装后，通常会自动创建一个对应的网络接口，名称类似于 <code class="notranslate">zt0</code> 或 <code class="notranslate">zt&lt;MemberID&gt;</code> 或 <code class="notranslate">ztnnnnnnnnnn</code> (其中 n 是随机字符) 或更常见的是 <code class="notranslate">zt</code> 后跟你加入的网络 ID 的一部分，例如 <code class="notranslate">ztwqeiruty</code>。您可以通过 <code class="notranslate">ip addr</code> 或 <code class="notranslate">ifconfig</code> 命令查看。</p>
+<ol>
+<li>
+<p><strong>通过 LuCI 创建/配置网络接口：</strong></p>
+<ul>
+<li>导航到 <strong>网络 (Network) -&gt; 接口 (Interfaces)</strong>。</li>
+<li>点击 <strong>添加新接口... (Add new interface...)</strong>。
+<ul>
+<li><strong>新接口的名称 (Name of the new interface):</strong> 输入一个有意义的名称，例如 <code class="notranslate">ZeroTier_VPN</code> 或 <code class="notranslate">ZT_LAN</code>。</li>
+<li><strong>协议 (Protocol):</strong> 选择 <strong>不配置协议 (Unmanaged)</strong> 或者 <strong>静态地址 (Static address)</strong>。如果 ZeroTier 客户端已从 ZeroTier Central 获取 IP，选择 "Unmanaged" 通常可以。如果选择 "Static address"，则手动输入 OpenWrt 在 ZeroTier 网络中的 IP 地址（如果 ZeroTier Central 支持手动分配且您已配置）。通常，ZeroTier 会自动处理 IP，所以 "Unmanaged" 或让它自行获取即可。</li>
+<li><strong>包括以下接口 (Cover the following interfaces):</strong> 选择 ZeroTier 创建的实际网络设备名 (例如 <code class="notranslate">ztabcdef12</code>，您可以通过 <code class="notranslate">ls /sys/class/net</code> 或 <code class="notranslate">ip link show</code> 查找以 <code class="notranslate">zt</code> 开头的接口)。</li>
+</ul>
+</li>
+<li>点击 <strong>创建接口 (Create interface)</strong>。</li>
+</ul>
+</li>
+<li>
+<p><strong>配置接口的基本设置 (如果选择了静态地址或需要调整)：</strong></p>
+<ul>
+<li>如果您选择了 "静态地址"，请填写从 ZeroTier Central 获取的 IP 地址和子网掩码。</li>
+<li>通常，ZeroTier 会自动处理 IP，所以主要目的是将此接口关联到一个防火墙区域。</li>
+</ul>
+</li>
+<li>
+<p><strong>配置接口的防火墙设置：</strong></p>
+<ul>
+<li>在接口编辑页面的 <strong>防火墙设置 (Firewall Settings)</strong> 标签下。</li>
+<li><strong>创建 / 分配防火墙区域 (Create / Assign firewall-zone):</strong> 在下拉菜单中选择 <strong>-- 自定义 -- (-- custom --)</strong>，然后输入一个新的区域名称，例如 <code class="notranslate">zt_vpn</code>。按回车或点击空白处确认。</li>
+</ul>
+</li>
+<li>
+<p><strong>保存并应用配置：</strong> 点击页面底部的 <strong>保存 (Save)</strong>，然后点击 <strong>保存并应用 (Save &amp; Apply)</strong>。</p>
+</li>
+</ol>
+<hr>
+<h3>步骤 4：配置 OpenWrt 防火墙规则</h3>
+<p>目标是允许 ZeroTier 客户端访问 OpenWrt 本身以及物理 LAN (<code class="notranslate">192.168.31.0/24</code>)。</p>
+<ol>
+<li>
+<p><strong>导航到 网络 (Network) -&gt; 防火墙 (Firewall)。</strong></p>
+</li>
+<li>
+<p><strong>编辑新创建的 <code class="notranslate">zt_vpn</code> 区域：</strong></p>
+<ul>
+<li>找到名为 <code class="notranslate">zt_vpn</code> (或您自定义的名称) 的区域，点击 <strong>编辑 (Edit)</strong>。</li>
+<li><strong>常规设置 (General Settings):</strong>
+<ul>
+<li><strong>名称 (Name):</strong> <code class="notranslate">zt_vpn</code></li>
+<li><strong>输入 (Input):</strong> <code class="notranslate">ACCEPT</code> (允许从 ZeroTier 客户端访问 OpenWrt 路由器本身，例如 SSH, LuCI)。</li>
+<li><strong>输出 (Output):</strong> <code class="notranslate">ACCEPT</code> (允许 OpenWrt 路由器发起连接到 ZeroTier 客户端)。</li>
+<li><strong>转发 (Forward):</strong> <code class="notranslate">REJECT</code> 或 <code class="notranslate">DROP</code> (默认，除非有特定需要允许该区域主动转发到其他区域)。</li>
+<li><strong>涵盖的网络 (Covered networks):</strong> 确保这里列出了您在上一步创建的 ZeroTier 接口 (例如 <code class="notranslate">ZeroTier_VPN</code>)。</li>
+</ul>
+</li>
+<li><strong>区域间的转发 (Inter-Zone Forwarding):</strong>
+<ul>
+<li>在 <strong>允许转发到目标区域 (Allow forward to destination zones):</strong> 中，选择 <code class="notranslate">lan</code>。这样就允许从 <code class="notranslate">zt_vpn</code> 区域的流量转发到 <code class="notranslate">lan</code> 区域。</li>
+<li>(可选，为实现双向通信) 在 <strong>允许从源区域转发 (Allow forward from source zones):</strong> 中，也选择 <code class="notranslate">lan</code>。这将允许 <code class="notranslate">lan</code> 区域的设备访问 <code class="notranslate">zt_vpn</code> 区域的设备（这需要 LAN 设备有到 ZeroTier 网络的路由，见步骤6的说明）。</li>
+</ul>
+</li>
+<li><strong>IP 动态伪装 (Masquerading):</strong>
+<ul>
+<li>这一步很重要，使得从 ZeroTier 访问 LAN 设备时，LAN 设备认为请求来自 OpenWrt 的 LAN IP 地址，从而能正确回应。</li>
+<li><strong>返回到防火墙区域概览页面。</strong></li>
+<li>找到 <code class="notranslate">lan</code> 区域，点击其 <strong>编辑 (Edit)</strong> 按钮。</li>
+<li>勾选 <strong>IP 动态伪装 (Masquerading)</strong> 复选框。如果您的 <code class="notranslate">lan</code> 区域已经为出站到 <code class="notranslate">wan</code> 的流量启用了伪装，这通常是默认设置，可能无需额外操作。此设置确保了从其他区域（如 <code class="notranslate">zt_vpn</code>）转发到 <code class="notranslate">lan</code> 并从 <code class="notranslate">lan</code> 出去的流量（如果 <code class="notranslate">lan</code> 不是最终目的地，例如访问 <code class="notranslate">lan</code> 上的设备）会被正确 NAT。更精确的控制是，您可以在 <code class="notranslate">zt_vpn</code> 区域的转发设置中针对到 <code class="notranslate">lan</code> 的转发启用伪装，但这在 LuCI 中不直接可见，通常全局开启 <code class="notranslate">lan</code> 区域的伪装即可。</li>
+<li><strong>本质上，您需要确保从 ZeroTier 网络到 LAN 网络的流量，在离开 OpenWrt 进入 LAN 时，源 IP 被转换为 OpenWrt 的 LAN IP。</strong>
+<ul>
+<li>
+<p>如果通过 LuCI 不易精确配置，可以通过自定义规则实现。在 <strong>网络 -&gt; 防火墙 -&gt; 自定义规则 (Custom Rules)</strong> 中添加（如果需要）：Bash</p>
+<pre class="notranslate"><code class="notranslate"># 确保替换 &lt;ZeroTier_Network_CIDR&gt; 为您的 ZeroTier IP 地址范围, e.g., 10.147.0.0/16
+# 确保替换 &lt;LAN_Interface_Name&gt; 为您的 LAN 接口名, e.g., br-lan
+# iptables -t nat -A POSTROUTING -s &lt;ZeroTier_Network_CIDR&gt; -o &lt;LAN_Interface_Name&gt; -j MASQUERADE
+</code></pre>
+<p>然而，通常将 <code class="notranslate">zt_vpn</code> 区域的流量转发到启用了 <code class="notranslate">Masquerading</code> 的 <code class="notranslate">lan</code> 区域就足够了。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>保存并应用防火墙配置：</strong> 点击页面底部的 <strong>保存并应用 (Save &amp; Apply)</strong>。</p>
+</li>
+</ol>
+<hr>
+<h3>步骤 5：检查路由 (通常自动处理)</h3>
+<ul>
+<li><strong>OpenWrt 路由:</strong> OpenWrt 应该能自动处理其直接连接的网络（LAN 和新创建的 ZeroTier 接口）之间的路由。</li>
+<li><strong>ZeroTier Central Managed Route:</strong> 这一步在步骤 2.3 中已经完成，它告诉其他 ZeroTier 客户端如何到达您的 <code class="notranslate">192.168.31.0/24</code> 网络。</li>
+</ul>
+<hr>
+<h3>步骤 6：验证配置</h3>
+<ol>
+<li>
+<p><strong>检查 ZeroTier 接口状态：</strong> 在 OpenWrt 的 SSH 中执行：</p>
+<p>Bash</p>
+<pre class="notranslate"><code class="notranslate">zerotier-cli listnetworks
+# 应该能看到您的网络 ID，状态为 OK，以及分配到的 IP 地址。
+# 例如：&lt;NetworkID&gt; &lt;Name&gt; &lt;MAC&gt; &lt;Status&gt; &lt;Type&gt; &lt;Device&gt; &lt;IP_Addresses&gt;
+# ... &lt;YOUR_NETWORK_ID&gt; your_network_name dead:beef:0123 ONLINE PRIVATE zabcdef12 10.x.x.x/24
+
+ip addr show zt&lt;NetworkID_part&gt; # (替换为实际接口名)
+# 检查接口是否有从 ZeroTier 网络获取的 IP 地址。
+</code></pre>
+</li>
+<li>
+<p><strong>从外部 ZeroTier 客户端测试：</strong></p>
+<ul>
+<li>确保外部设备已连接到同一个 ZeroTier 网络。</li>
+<li><strong>Ping OpenWrt 的 ZeroTier IP:</strong> <code class="notranslate">ping &lt;OpenWrt_ZeroTier_IP&gt;</code></li>
+<li><strong>SSH 或 Web 访问 OpenWrt:</strong> <code class="notranslate">ssh root@&lt;OpenWrt_ZeroTier_IP&gt;</code> 或在浏览器中打开 <code class="notranslate">http://&lt;OpenWrt_ZeroTier_IP&gt;</code>。</li>
+<li><strong>Ping OpenWrt 的 LAN IP (如果允许):</strong> <code class="notranslate">ping &lt;OpenWrt_LAN_IP&gt;</code> (例如 <code class="notranslate">192.168.31.x</code>，OpenWrt 虚拟机在物理 LAN 上的 IP)。</li>
+<li><strong>Ping 物理 LAN 中的其他设备:</strong> <code class="notranslate">ping &lt;IP_of_Device_on_192.168.31.0/24&gt;</code> (例如 <code class="notranslate">ping 192.168.31.100</code>)。</li>
+</ul>
+</li>
+<li>
+<p><strong>双向通信 (从 LAN 访问 ZeroTier 设备):</strong></p>
+<ul>
+<li>要使物理 LAN (<code class="notranslate">192.168.31.0/24</code>) 中的设备能够发起连接到 ZeroTier 客户端，这些 LAN 设备需要知道如何路由到 ZeroTier 网络。</li>
+<li><strong>如果 OpenWrt 虚拟机是您 <code class="notranslate">192.168.31.0/24</code> 网络的默认网关</strong>，则此步骤可能不需要额外配置。</li>
+<li><strong>如果 OpenWrt 不是默认网关</strong>，您需要在您的主物理路由器（例如 <code class="notranslate">192.168.31.1</code>）上添加一条静态路由：
+<ul>
+<li><strong>目标网络 (Destination Network):</strong> <code class="notranslate">&lt;Your_ZeroTier_Network_CIDR&gt;</code> (例如 <code class="notranslate">10.147.0.0/16</code>，根据您 ZeroTier Central 的设置)</li>
+<li><strong>子网掩码 (Subnet Mask):</strong> (对应 CIDR 的掩码)</li>
+<li><strong>网关/下一跳 (Gateway/Next Hop):</strong> <code class="notranslate">&lt;OpenWrt_VM_LAN_IP&gt;</code> (例如 <code class="notranslate">192.168.31.x</code>，OpenWrt 虚拟机在物理 LAN 上的 IP 地址)</li>
+</ul>
+</li>
+<li>同时，确保防火墙设置中 <code class="notranslate">lan</code> 区域允许转发到 <code class="notranslate">zt_vpn</code> 区域 (步骤 4.2 中已提及)。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3>步骤 7：常见问题与注意事项</h3>
+<ul>
+<li><strong>防火墙问题：</strong> 最常见的问题是防火墙配置不正确。仔细检查区域分配、转发规则和输入规则。可以使用 <code class="notranslate">logread -f</code> 在 OpenWrt 上查看防火墙日志，辅助排错。</li>
+<li><strong>ZeroTier Central 授权：</strong> 确保 OpenWrt 设备已在 ZeroTier Central 中被授权，并且 Managed Route 配置正确无误。</li>
+<li><strong>接口名称：</strong> ZeroTier 创建的接口名称 (<code class="notranslate">zt...</code>) 可能会变化或难以预测。使用 <code class="notranslate">ip link show</code> 或 LuCI 界面仔细确认。</li>
+<li><strong>MTU 问题：</strong> 在极少数情况下，ZeroTier 的 MTU (通常是 1280 或更高，取决于底层网络) 可能与某些应用或网络路径不兼容。ZeroTier 通常会自动处理。</li>
+<li><strong>虚拟机网络模式：</strong> 确保您的 OpenWrt 虚拟机的网络适配器设置为桥接模式 (Bridged Adapter)并连接到正确的物理网络接口，这样它才能与您的物理 LAN (<code class="notranslate">192.168.31.0/24</code>) 处于同一网段。</li>
+<li><strong>双向通信的复杂性：</strong> 从 LAN 主动连接到 ZeroTier 设备通常比反向连接更复杂，因为它依赖于 LAN 侧的路由配置。如果仅需 ZeroTier 客户端访问 LAN，则 LAN 侧路由非必需（归功于 NAT/伪装）。</li>
+<li><strong>重启服务：</strong> 更改配置后，有时需要重启 ZeroTier 服务 (<code class="notranslate">/etc/init.d/zerotier restart</code>) 或网络服务 (<code class="notranslate">/etc/init.d/network restart</code>)，或者直接重启 OpenWrt 虚拟机。</li>
+</ul>
+<hr>
+<p>请按照这些步骤操作。如果在特定步骤遇到问题，请提供详细的错误信息或配置截图，以便进一步协助。</p>
+<hr>
+<p>我刚按照步骤完成了，从外部 ZeroTier客户端 ping openwrt的 ZeroTier IP可以ping通，但无法ping通OpenWrt 的 LAN IP，这个是什么原因导致的</p>
+<hr>
+<p>显示思路</p>
+<p>这通常意味着 ZeroTier 网络本身是通的，但 OpenWrt 的防火墙或路由配置阻止了从 ZeroTier 网络访问其 LAN 接口IP。</p>
+<p>以下是一些可能的原因和排查步骤：</p>
+<ol>
+<li>
+<p><strong>检查 OpenWrt 防火墙 <code class="notranslate">zt_vpn</code> 区域的 “输入 (Input)” 设置：</strong></p>
+<ul>
+<li>登录 LuCI。</li>
+<li>导航到 <strong>网络 (Network) -&gt; 防火墙 (Firewall)</strong>。</li>
+<li>找到您为 ZeroTier 接口创建的防火墙区域（例如 <code class="notranslate">zt_vpn</code>）。</li>
+<li>点击 <strong>编辑 (Edit)</strong>。</li>
+<li>确保 <strong>输入 (Input)</strong> 设置为 <strong>ACCEPT (接受)</strong>。这条规则的目的是允许从 ZeroTier 网络访问 OpenWrt 路由器本身（包括其所有接口上的 IP 地址，如 SSH、LuCI 界面等）。</li>
+<li>如果这里是 <code class="notranslate">REJECT</code> 或 <code class="notranslate">DROP</code>，那么来自 ZeroTier 网络的流量（包括 ping）将无法到达 OpenWrt 的任何 IP 地址（包括 LAN IP）。</li>
+<li>修改后，点击 <strong>保存并应用 (Save &amp; Apply)</strong>。</li>
+</ul>
+</li>
+<li>
+<p><strong>检查是否有其他冲突的防火墙规则：</strong></p>
+<ul>
+<li>在 <strong>网络 (Network) -&gt; 防火墙 (Firewall) -&gt; 通信规则 (Traffic Rules)</strong> 中，检查是否有自定义规则可能阻止了来自 ZeroTier 网络 (源区域 <code class="notranslate">zt_vpn</code> 或源 IP 为 ZeroTier 网段) 的 ICMP (ping) 请求。</li>
+</ul>
+</li>
+<li>
+<p><strong>使用 <code class="notranslate">tcpdump</code> 在 OpenWrt 上抓包诊断：</strong> 如果您不熟悉 <code class="notranslate">tcpdump</code>，请谨慎操作。</p>
+<ul>
+<li>
+<p>首先，您可能需要安装它。通过 SSH 连接到 OpenWrt 后运行：Bash</p>
+<pre class="notranslate"><code class="notranslate">opkg update
+opkg install tcpdump
+</code></pre>
+</li>
+<li>
+<p>然后，在 ZeroTier 接口上监听 ICMP 包，看看 ping 请求是否到达 OpenWrt。假设您的 ZeroTier 接口名为 <code class="notranslate">ztabcdef12</code> (请用 <code class="notranslate">ip addr</code> 或 <code class="notranslate">zerotier-cli listnetworks</code> 确认您的实际接口名)，您的 ZeroTier 客户端 IP 为 <code class="notranslate">&lt;ZT_CLIENT_IP&gt;</code>，OpenWrt 的 LAN IP 为 <code class="notranslate">&lt;OPENWRT_LAN_IP&gt;</code> (例如 <code class="notranslate">192.168.31.1</code>):Bash</p>
+<pre class="notranslate"><code class="notranslate">tcpdump -i ztabcdef12 -n icmp and host &lt;ZT_CLIENT_IP&gt; and dst host &lt;OPENWRT_LAN_IP&gt;
+</code></pre>
+<p>当您从 ZeroTier 客户端 ping OpenWrt 的 LAN IP 时：</p>
+<ul>
+<li><strong>如果您在这里看不到任何数据包</strong>，表示 ping 请求甚至没有通过 ZeroTier 网络到达 OpenWrt 的 ZeroTier 接口。这可能指向 ZeroTier Central 的路由配置问题（但您提到能 ping 通 OpenWrt 的 ZT IP，所以这条路径应该部分正常）或客户端的 ZeroTier 配置问题。</li>
+<li><strong>如果您能看到 ICMP echo request 数据包到达</strong>，但没有 ping 通，说明 OpenWrt 收到了请求，但没有响应或响应被阻止了。这进一步指向 OpenWrt 本地的防火墙或内部路由问题。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>在 OpenWrt 上启用防火墙日志记录：</strong> 这可以帮助您看到哪些数据包被拒绝了。</p>
+<ul>
+<li>
+<p>在 LuCI 中，进入 <strong>网络 (Network) -&gt; 防火墙 (Firewall)</strong>。</p>
+</li>
+<li>
+<p>在各个区域（特别是 <code class="notranslate">zt_vpn</code> 和 <code class="notranslate">lan</code>）的编辑页面，通常在“高级设置”或类似标签下，可以找到 “记录被拒绝/忽略的数据包 (Log dropped/rejected packets)” 的选项，启用它。</p>
+</li>
+<li>
+<p>或者，通过 SSH 添加临时的日志规则（这更高级，如果通过 LuCI 操作不便时使用）。例如，在 <code class="notranslate">INPUT</code> 链的末尾（但在最终的 <code class="notranslate">DROP</code> 规则之前，如果适用）添加：Bash</p>
+<pre class="notranslate"><code class="notranslate">iptables -A INPUT -j LOG --log-prefix "INPUT_DROP: " --log-level 7
+</code></pre>
+<p>(注意：这条规则会记录所有被 <code class="notranslate">INPUT</code> 链最终策略丢弃的包，可能会产生大量日志。)</p>
+</li>
+<li>
+<p>然后尝试 ping，并通过 SSH 查看日志：Bash</p>
+<pre class="notranslate"><code class="notranslate">logread -f
+</code></pre>
+</li>
+<li>
+<p>查找与您的 ZeroTier 客户端 IP 和 OpenWrt LAN IP 相关的被拒绝的 ICMP 数据包。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>确认 OpenWrt 的 LAN IP 和接口：</strong></p>
+<ul>
+<li>在 OpenWrt 的 SSH 中运行 <code class="notranslate">ip addr show br-lan</code> (或者您 LAN 口对应的接口名，通常是 <code class="notranslate">br-lan</code>)。</li>
+<li>确认 <code class="notranslate">&lt;OPENWRT_LAN_IP&gt;</code> (例如 <code class="notranslate">192.168.31.x</code>) 正确配置在该接口上并且接口处于 <code class="notranslate">UP</code> 状态。</li>
+</ul>
+</li>
+</ol>
+<p><strong>最常见的原因是第一点：<code class="notranslate">zt_vpn</code> 防火墙区域的 <code class="notranslate">Input</code> 策略没有设置为 <code class="notranslate">ACCEPT</code>。</strong></p>
+<p>请先从第一点开始检查。如果问题依旧，尝试 <code class="notranslate">tcpdump</code> 和防火墙日志来获取更多线索。</p>
+<hr>
+<p>openwrt所在局域网的网关为192.168.31.1，openwrt是作为旁路由使用的，是否与这个有关系</p>
+<hr>
+<p>显示思路</p>
+<p>是的，OpenWrt 作为旁路由（Side Router）这个情况<strong>非常关键</strong>，并且很可能与您描述的问题（无法 ping 通 OpenWrt 的 LAN IP）有关，即使您能 ping 通其 ZeroTier IP。</p>
+<p>当 OpenWrt 作为旁路由时，它的 LAN 口连接到主局域网，并且它自身<strong>不是</strong>这个局域网中其他设备的主要网关。这意味着：</p>
+<ul>
+<li>OpenWrt 的 LAN 接口（例如 <code class="notranslate">br-lan</code>，IP 地址为 <code class="notranslate">192.168.31.X</code>）有一个网关设置，指向您的主路由器（<code class="notranslate">192.168.31.1</code>）。</li>
+<li>ZeroTier 客户端发起的 ping 请求，目标是 OpenWrt 的 LAN IP (<code class="notranslate">192.168.31.X</code>)。</li>
+</ul>
+<p><strong>问题分析：应答包的路由可能出错</strong></p>
+<ol>
+<li>
+<p><strong>Ping 请求到达：</strong></p>
+<ul>
+<li>ZeroTier 客户端 (<code class="notranslate">ZT_Client_IP</code>) -&gt; OpenWrt 的 ZeroTier IP (<code class="notranslate">OpenWrt_ZT_IP</code>) -&gt; 经过 ZeroTier 网络 -&gt; 到达 OpenWrt 的 ZeroTier 接口 (<code class="notranslate">zt_interface</code>)。</li>
+<li>ZeroTier 客户端 (<code class="notranslate">ZT_Client_IP</code>) -&gt; OpenWrt 的 LAN IP (<code class="notranslate">192.168.31.X</code>) -&gt; 经过 ZeroTier 网络 -&gt; 到达 OpenWrt 的 ZeroTier 接口 (<code class="notranslate">zt_interface</code>)。</li>
+<li>在这两种情况下，如果防火墙允许（<code class="notranslate">zt_vpn</code> 区域 <code class="notranslate">Input: ACCEPT</code>），OpenWrt 核心应该会收到这个 ICMP 请求。</li>
+</ul>
+</li>
+<li>
+<p><strong>Ping OpenWrt 的 ZT IP (工作正常时)：</strong></p>
+<ul>
+<li>请求包：源 <code class="notranslate">ZT_Client_IP</code>，目标 <code class="notranslate">OpenWrt_ZT_IP</code>。</li>
+<li>应答包：源 <code class="notranslate">OpenWrt_ZT_IP</code>，目标 <code class="notranslate">ZT_Client_IP</code>。</li>
+<li>OpenWrt 查看路由表，发现 <code class="notranslate">ZT_Client_IP</code> 是通过 <code class="notranslate">zt_interface</code> 直接可达的，所以应答包从 <code class="notranslate">zt_interface</code> 发出。这通常没问题。</li>
+</ul>
+</li>
+<li>
+<p><strong>Ping OpenWrt 的 LAN IP (出现问题时)：</strong></p>
+<ul>
+<li>请求包：源 <code class="notranslate">ZT_Client_IP</code>，目标 <code class="notranslate">OpenWrt_LAN_IP</code> (<code class="notranslate">192.168.31.X</code>)。</li>
+<li><strong>关键点：应答包的源 IP 地址将是 <code class="notranslate">OpenWrt_LAN_IP</code> (<code class="notranslate">192.168.31.X</code>)，目标是 <code class="notranslate">ZT_Client_IP</code>。</strong></li>
+<li>现在 OpenWrt 需要决定从哪个接口发送这个应答包。
+<ul>
+<li>它知道 <code class="notranslate">ZT_Client_IP</code> 属于 ZeroTier 网络，应该通过 <code class="notranslate">zt_interface</code> 发送。</li>
+<li><strong>但是，因为应答包的源 IP 是 <code class="notranslate">192.168.31.X</code> (其 LAN IP)，某些操作系统或路由策略可能会尝试从拥有该 IP 的接口（即 LAN 接口 <code class="notranslate">br-lan</code>）发送这个包。</strong></li>
+<li>如果应答包试图从 LAN 接口 (<code class="notranslate">br-lan</code>) 发出，它的下一跳将是 OpenWrt 的 LAN 口配置的网关，即您的主路由 <code class="notranslate">192.168.31.1</code>。</li>
+<li>您的主路由 <code class="notranslate">192.168.31.1</code> 并不知道如何到达 <code class="notranslate">ZT_Client_IP</code>（除非您在主路由上也为 ZeroTier 网络配置了静态路由指向 OpenWrt 的 LAN IP，但这通常是为了 LAN 内其他设备访问 ZT），所以应答包会丢失。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p><strong>这就是旁路由模式下常见的问题：多宿主主机（Multi-homed Host）的应答路由问题。</strong></p>
+<p><strong>如何排查和可能的解决方向：</strong></p>
+<ol>
+<li>
+<p><strong>再次确认防火墙 <code class="notranslate">zt_vpn</code> 区域的 <code class="notranslate">Input</code> 设置为 <code class="notranslate">ACCEPT</code>：</strong> 这是前提条件，确保 OpenWrt 至少会接收发往其 LAN IP 的入站 ICMP 请求。如果这里是 <code class="notranslate">DROP</code> 或 <code class="notranslate">REJECT</code>，那么连应答的机会都没有。</p>
+</li>
+<li>
+<p><strong>使用 <code class="notranslate">tcpdump</code> 捕获应答包的路径：</strong> 这是诊断问题的最有效方法。</p>
+<ul>
+<li>
+<p>SSH 登录 OpenWrt。</p>
+</li>
+<li>
+<p><strong>在 OpenWrt 的 LAN 接口上监听 ICMP：</strong> (假设 LAN 接口是 <code class="notranslate">br-lan</code>，OpenWrt 的 LAN IP 是 <code class="notranslate">192.168.31.X</code>，ZeroTier 客户端 IP 是 <code class="notranslate">&lt;ZT_Client_IP&gt;</code>)</p>
+<p>Bash</p>
+<pre class="notranslate"><code class="notranslate">tcpdump -i br-lan -n icmp and src host 192.168.31.X and dst host &lt;ZT_Client_IP&gt;
+</code></pre>
+<p>当您从 ZeroTier 客户端 ping OpenWrt 的 <code class="notranslate">192.168.31.X</code> 时，如果您在这个 <code class="notranslate">tcpdump</code> 中看到了 ICMP echo reply，那就意味着 OpenWrt 正试图从错误的接口（LAN 口）回应，导致失败。</p>
+</li>
+<li>
+<p><strong>同时（或之后），在 OpenWrt 的 ZeroTier 接口上监听 ICMP：</strong> (假设 ZT 接口是 <code class="notranslate">ztabcdef12</code>)</p>
+<p>Bash</p>
+<pre class="notranslate"><code class="notranslate">tcpdump -i ztabcdef12 -n icmp and src host 192.168.31.X and dst host &lt;ZT_Client_IP&gt;
+</code></pre>
+<p>如果您在这里看到了 ICMP echo reply，那说明路由是正确的，问题可能在其他地方（例如 ZT 客户端的防火墙，或者路径上的其他问题，但这与您能 ping 通 ZT IP 的情况矛盾）。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>检查 OpenWrt 的路由表：</strong></p>
+<p>Bash</p>
+<pre class="notranslate"><code class="notranslate">ip route show
+ip rule show
+</code></pre>
+<ul>
+<li>确保有一条明确的路由指向您的 ZeroTier 网络段，通过 ZeroTier 接口出去。例如：<code class="notranslate">10.147.0.0/16 dev ztabcdef12 scope link src &lt;OpenWrt_ZT_IP&gt;</code>。</li>
+<li><code class="notranslate">ip rule show</code> 可以查看是否有策略路由规则影响了源地址为 LAN IP 的包的路由行为。</li>
+</ul>
+</li>
+</ol>
+<p><strong>可能的解决方案 (如果确认是应答路由问题)：</strong></p>
+<ul>
+<li>
+<p><strong>策略路由 (Policy Routing / Source-Based Routing):</strong> 您可以配置 OpenWrt，使其根据数据包的源 IP 地址来选择不同的路由表或路由规则。对于源 IP 是 <code class="notranslate">192.168.31.X</code> (OpenWrt LAN IP) 且目标是 ZeroTier 网络的流量，强制其通过 ZeroTier 接口出去。这通常需要创建一个新的路由表，并将特定流量导向该表。 这比较复杂，但通常是解决此类问题的标准方法。</p>
+<p>例如（概念性，具体命令需适配 OpenWrt）：</p>
+<ol>
+<li>创建一个新的路由表 (例如叫 <code class="notranslate">from_lan_ip_table</code>)。</li>
+<li>在这个新表中，为 ZeroTier 网络添加一条通过 <code class="notranslate">zt_interface</code> 的路由，并且可能还需要一条默认路由也走 <code class="notranslate">zt_interface</code> (如果需要此源 IP 的流量完全通过 ZT 出去)。</li>
+<li>添加一条 <code class="notranslate">ip rule</code>，规定凡是源 IP 为 <code class="notranslate">192.168.31.X</code> 的流量，都使用 <code class="notranslate">from_lan_ip_table</code> 这个路由表。</li>
+</ol>
+<p>Bash</p>
+<pre class="notranslate"><code class="notranslate"># 示例，非直接可用，需调整
+# echo "100 from_lan_ip" &gt;&gt; /etc/iproute2/rt_tables
+# ip route add &lt;ZeroTier_Network_CIDR&gt; dev &lt;zt_interface_name&gt; table from_lan_ip
+# ip route add default via &lt;OpenWrt_ZT_Gateway_IF_ANY&gt; dev &lt;zt_interface_name&gt; table from_lan_ip # 可能不需要默认路由，或根据情况
+# ip rule add from &lt;OpenWrt_LAN_IP&gt;/32 table from_lan_ip priority 100
+</code></pre>
+</li>
+<li>
+<p><strong>修改 <code class="notranslate">rp_filter</code> 设置 (谨慎)：</strong> 路径反向过滤 (<code class="notranslate">net.ipv4.conf.&lt;interface&gt;.rp_filter</code>)。将其设置为 <code class="notranslate">0</code> (关闭) 或 <code class="notranslate">2</code> (松散模式) 有时可以“解决”这类问题，但这通常不被推荐，因为它会降低安全性。不建议作为首选方案。</p>
+</li>
+<li>
+<p><strong>确保 <code class="notranslate">/proc/sys/net/ipv4/conf/&lt;zt_interface&gt;/route_localnet</code> 为 1 (如果适用，通常用于NAT本身IP)：</strong> 这个参数允许将分配给本地接口的 IP 地址（通常是回环地址之外的）用作外部地址进行路由。对于您的问题，这可能不是直接原因，但值得了解。</p>
+</li>
+</ul>
+<p><strong>总结与建议：</strong></p>
+<ol>
+<li><strong>首要任务：</strong> 使用 <code class="notranslate">tcpdump</code> 确认 ICMP echo reply 是从哪个接口尝试发出的。这是判断问题根源的关键。</li>
+<li>如果确认应答包试图从 LAN 口发出，那么您需要研究如何在 OpenWrt 上实施策略路由，以确保源自 OpenWrt LAN IP 并发往 ZeroTier 网络的回复能正确地从 ZeroTier 接口发出。</li>
+</ol>
+<p>旁路由的配置确实会引入这类路由复杂性。请先进行 <code class="notranslate">tcpdump</code> 测试。</p>
+<hr>
+<p>在ssh中输入tcpdump -i br-lan -n icmp and src host 192.168.31.9 and dst host 192.168.196.9并运行后，屏幕提示 tcpdump: verbose output suppressed, use -v[v]... for full protocol decode</p>
+<p>listening on br-lan, link-type EN10MB (Ethernet), snapshot length 262144 bytes，但是没有其他内容，无法看到 ICMP echo reply</p>
+<hr>
+<p>显示思路</p>
+<p>好的，您在 <code class="notranslate">br-lan</code> 接口上运行 <code class="notranslate">tcpdump</code> 后没有看到任何匹配的 ICMP echo reply，这其实是一个有用的信息。它表明：</p>
+<p><strong>OpenWrt 没有尝试从其 LAN 接口 (<code class="notranslate">br-lan</code>) 回复这个 ping 请求。</strong></p>
+<p>这排除了之前的一个主要猜测，即 OpenWrt 因为是旁路由，错误地将针对其 LAN IP 的 ping 回复发送给了主网关 (<code class="notranslate">192.168.31.1</code>)。如果回复包走了错误的路径 (br-lan)，您应该能在 <code class="notranslate">tcpdump</code> 中看到。</p>
+<p>既然回复包没有从 <code class="notranslate">br-lan</code> 发出，那么现在有以下几种可能性：</p>
+<ol>
+<li>
+<p><strong>OpenWrt 的防火墙阻止了最初的 ICMP Echo Request：</strong></p>
+<ul>
+<li>尽管 ping 请求的目标是 OpenWrt 的 LAN IP (<code class="notranslate">192.168.31.9</code>)，但这个请求是通过 ZeroTier 网络到达 OpenWrt 的 ZeroTier 接口的。</li>
+<li>如果 OpenWrt 的防火墙（特别是与 ZeroTier 接口关联的区域，我们之前称为 <code class="notranslate">zt_vpn</code>）的 <code class="notranslate">INPUT</code> 策略不是 <code class="notranslate">ACCEPT</code>，或者有其他规则明确拒绝了来自 ZeroTier 网络的 ICMP 请求，那么 OpenWrt 根本就不会处理这个请求，自然也不会产生回复。</li>
+<li><strong>这是目前最可能的怀疑点。</strong></li>
+</ul>
+</li>
+<li>
+<p><strong>OpenWrt 正在通过正确的 ZeroTier 接口回复，但回复包在途中丢失，或者 ZeroTier 客户端没有收到/处理它：</strong></p>
+<ul>
+<li>这种情况相对少见，因为您提到可以 ping 通 OpenWrt 的 ZeroTier IP。这意味着从 OpenWrt 的 ZeroTier IP 发出的回复能够成功到达客户端。</li>
+<li>不过，回复包的源 IP 不同（一个是 OpenWrt 的 ZT IP，另一个是 OpenWrt 的 LAN IP <code class="notranslate">192.168.31.9</code>），理论上客户端或网络路径中非常特殊的配置可能会区别对待它们。</li>
+</ul>
+</li>
+<li>
+<p><strong>您在运行 <code class="notranslate">tcpdump</code> 时，ZeroTier 客户端 (<code class="notranslate">192.168.196.9</code>) 没有实际发出 ping 请求，或者目标/源 IP 地址不完全匹配：</strong></p>
+<ul>
+<li>请确保在 <code class="notranslate">tcpdump</code> 运行时，确实从 <code class="notranslate">192.168.196.9</code> 发起了对 <code class="notranslate">192.168.31.9</code> 的 ping。</li>
+</ul>
+</li>
+</ol>
+<p><strong>下一步的排查步骤：</strong></p>
+<p>现在最关键的是要在 OpenWrt 的 <strong>ZeroTier 接口</strong>上进行 <code class="notranslate">tcpdump</code>，以观察数据包的进出情况。</p>
+<ol>
+<li>
+<p><strong>确认 ZeroTier 接口名称：</strong></p>
+<ul>
+<li>在 OpenWrt 的 SSH 中运行 <code class="notranslate">ip addr</code> 或 <code class="notranslate">zerotier-cli listnetworks</code>。找到您的 ZeroTier 网络对应的接口名称，例如 <code class="notranslate">ztabcdef12</code> 或类似格式。</li>
+</ul>
+</li>
+<li>
+<p><strong>在 ZeroTier 接口上监听传入的 ICMP Echo Request：</strong></p>
+<ul>
+<li>
+<p>假设您的 ZeroTier 接口名为 <code class="notranslate">&lt;zt_interface_name&gt;</code>，OpenWrt 的 LAN IP 为 <code class="notranslate">192.168.31.9</code>，ZeroTier 客户端 IP 为 <code class="notranslate">192.168.196.9</code>。</p>
+</li>
+<li>
+<p>运行以下命令，并同时从 ZeroTier 客户端 ping OpenWrt 的 LAN IP (<code class="notranslate">192.168.31.9</code>)：Bash</p>
+<pre class="notranslate"><code class="notranslate">tcpdump -i &lt;zt_interface_name&gt; -n icmp and dst host 192.168.31.9 and src host 192.168.196.9
+</code></pre>
+</li>
+<li>
+<p><strong>观察结果：</strong></p>
+<ul>
+<li><strong>如果您在这里看不到任何数据包</strong>：这表示 ping 请求没有到达 OpenWrt 的 ZeroTier 接口。可能的原因有：ZeroTier 客户端没有正确配置路由到 <code class="notranslate">192.168.31.0/24</code> 网段，或者 ZeroTier Central 的托管路由 (<code class="notranslate">Managed Routes</code>) 配置有问题（虽然您能 ping 通 OpenWrt 的 ZT IP，说明 ZT 网络基本通畅，但具体到 LAN IP 的路由仍需确认）。</li>
+<li><strong>如果您能看到 ICMP echo request 数据包到达</strong>：这很好，说明请求已成功抵达 OpenWrt。接下来的问题就是 OpenWrt 是否以及如何回复。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>如果上一步能看到请求到达，则在 ZeroTier 接口上监听传出的 ICMP Echo Reply：</strong></p>
+<ul>
+<li>
+<p>保持从 ZeroTier 客户端 ping OpenWrt 的 LAN IP (<code class="notranslate">192.168.31.9</code>)。</p>
+</li>
+<li>
+<p>运行以下命令：Bash</p>
+<pre class="notranslate"><code class="notranslate">tcpdump -i &lt;zt_interface_name&gt; -n icmp and src host 192.168.31.9 and dst host 192.168.196.9
+</code></pre>
+</li>
+<li>
+<p><strong>观察结果：</strong></p>
+<ul>
+<li><strong>如果您在这里看不到 ICMP echo reply 数据包</strong> (但在上一步看到了 echo request)：这强烈表明 OpenWrt 收到了请求，但由于防火墙规则或其他内部原因，没有生成或发出回复。<strong>请重点检查 OpenWrt 防火墙 <code class="notranslate">zt_vpn</code> 区域的 <code class="notranslate">Input</code> 是否为 <code class="notranslate">ACCEPT</code>，并检查是否有其他规则阻止了 ICMP。</strong></li>
+<li><strong>如果您能看到 ICMP echo reply 数据包从这里发出</strong>：这说明 OpenWrt 正确地从 ZeroTier 接口回复了。如果客户端仍然 ping 不通，问题可能出在 ZeroTier 网络中途、ZeroTier 客户端的防火墙，或者客户端不接受来自 <code class="notranslate">192.168.31.9</code> 这个源 IP 的回复（可能性较低但存在）。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>再次检查并启用防火墙日志：</strong></p>
+<ul>
+<li>确保 OpenWrt 防火墙与 ZeroTier 接口关联的区域（例如 <code class="notranslate">zt_vpn</code>）的 <strong>输入 (Input)</strong> 设置为 <strong>ACCEPT (接受)</strong>。</li>
+<li>在该区域的设置中，启用“记录被拒绝/忽略的数据包”。</li>
+<li>尝试 ping 后，查看 OpenWrt 的系统日志 (<code class="notranslate">logread -f</code> 或 <code class="notranslate">logread | grep DROP</code>)，看是否有与从 <code class="notranslate">192.168.196.9</code> 到 <code class="notranslate">192.168.31.9</code> 的 ICMP 包相关的丢弃记录。</li>
+</ul>
+</li>
+</ol>
+<p>根据您在 ZeroTier 接口上 <code class="notranslate">tcpdump</code> 的结果，我们可以更精确地定位问题。目前来看，OpenWrt 的防火墙是最需要关注的地方。</p>
+<hr>
+<p>运行了tcpdump -i zt7nnop44b -n icmp and dst host 192.168.31.9 and src host 192.168.196.9命令后，屏幕显示：tcpdump: verbose output suppressed, use -v[v]... for full protocol decode</p>
+<p>listening on zt7nnop44b, link-type EN10MB (Ethernet), snapshot length 262144 bytes，没有其他信息</p>
+<hr>
+<p>显示思路</p>
+<p>这个 <code class="notranslate">tcpdump</code> 的结果非常关键！</p>
+<p>您在 OpenWrt 的 ZeroTier 接口 <code class="notranslate">zt7nnop44b</code> 上运行了命令 <code class="notranslate">tcpdump -i zt7nnop44b -n icmp and dst host 192.168.31.9 and src host 192.168.196.9</code>，屏幕除了显示 <code class="notranslate">tcpdump</code> 正在监听外，<strong>没有任何其他信息</strong>。</p>
+<p>这表明，当您的 ZeroTier 客户端 (<code class="notranslate">192.168.196.9</code>) ping OpenWrt 的 LAN IP (<code class="notranslate">192.168.31.9</code>) 时，<strong>ICMP Echo Request 数据包根本没有到达 OpenWrt 的 ZeroTier 接口 <code class="notranslate">zt7nnop44b</code>。</strong></p>
+<p>这意味着问题<strong>不</strong>在 OpenWrt 如何处理或回复这个 ping 请求（因为 OpenWrt 压根没收到它），而是出在数据包从 ZeroTier 客户端到 OpenWrt 的 ZeroTier 接口的这个路径上，或者说，ZeroTier 客户端没有正确地将发往 <code class="notranslate">192.168.31.9</code> 的数据包通过 ZeroTier 网络发送给 OpenWrt。</p>
+<p>既然您能从 ZeroTier 客户端 ping 通 OpenWrt 的 ZeroTier IP，这说明：</p>
+<ul>
+<li>客户端和 OpenWrt 都在同一个 ZeroTier 网络中且已授权。</li>
+<li>客户端和 OpenWrt 之间的基本 ZeroTier 通信是正常的。</li>
+</ul>
+<p>那么，为什么发往 OpenWrt LAN IP 的包没有到达呢？原因可能如下：</p>
+<ol>
+<li>
+<p><strong>ZeroTier 客户端的路由问题：</strong></p>
+<ul>
+<li>客户端 (<code class="notranslate">192.168.196.9</code>) 可能没有正确设置指向 <code class="notranslate">192.168.31.0/24</code> 网段（或具体到 <code class="notranslate">192.168.31.9</code>）的路由，使其通过 ZeroTier 网络。</li>
+<li><strong>检查客户端的 ZeroTier 设置：</strong> 确保客户端的 ZeroTier 配置中允许了“允许托管路由” (Allow Managed Routes) 或类似选项。这是至关重要的，客户端需要从 ZeroTier Central 获取并应用这些路由。</li>
+<li><strong>检查客户端的操作系统路由表：</strong>
+<ul>
+<li>在 Windows 上：以管理员身份运行 <code class="notranslate">route print -4</code>。</li>
+<li>在 Linux 上：运行 <code class="notranslate">ip route show</code> 或 <code class="notranslate">netstat -rn</code>。</li>
+<li>在 macOS 上：运行 <code class="notranslate">netstat -rn</code>。 查看是否有一条路由规则将 <code class="notranslate">192.168.31.0/24</code> 指向 OpenWrt 的 ZeroTier IP 地址（或者通过客户端自身的 ZeroTier 接口）。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>ZeroTier Central 的托管路由 (Managed Routes) 配置问题：</strong></p>
+<ul>
+<li>登录 <code class="notranslate">my.zerotier.com</code>。</li>
+<li>进入您的 ZeroTier 网络设置。</li>
+<li><strong>仔细检查“Managed Routes”部分：</strong>
+<ul>
+<li>目标网络 (Destination)：应该是 <code class="notranslate">192.168.31.0/24</code>。</li>
+<li>下一跳 (Via)：<strong>必须是 OpenWrt 虚拟机在 ZeroTier 网络中的 IP 地址</strong>。请务必确认这个 IP 地址是正确的，并且是您这台 OpenWrt（LAN IP 为 <code class="notranslate">192.168.31.9</code>）的 ZeroTier IP。</li>
+<li>是否有任何拼写错误或配置错误？</li>
+</ul>
+</li>
+<li>ZeroTier Central 的配置更改可能需要一点时间才能同步到所有客户端。</li>
+</ul>
+</li>
+<li>
+<p><strong>ZeroTier 客户端防火墙：</strong></p>
+<ul>
+<li>虽然可能性较低，但客户端自身的防火墙可能会阻止出站到 <code class="notranslate">192.168.31.0/24</code> 网段的 ICMP 包（即使是用户发起的）。</li>
+</ul>
+</li>
+<li>
+<p><strong>ZeroTier 网络规则 (Flow Rules)：</strong></p>
+<ul>
+<li>在 ZeroTier Central 的网络设置中，有一个“Flow Rules”部分。默认情况下，规则是 <code class="notranslate">accept;</code>，允许所有流量。检查一下是否有自定义规则意外地阻止了从 <code class="notranslate">192.168.196.x</code> 到 <code class="notranslate">192.168.31.x</code> 的通信。</li>
+</ul>
+</li>
+</ol>
+<p><strong>下一步的排查重点应放在 ZeroTier 客户端 (<code class="notranslate">192.168.196.9</code>) 和 ZeroTier Central 的路由配置上：</strong></p>
+<ol>
+<li>
+<p><strong>在 ZeroTier 客户端 (<code class="notranslate">192.168.196.9</code>) 上：</strong></p>
+<ul>
+<li><strong>首要任务：</strong> 确保 ZeroTier 客户端软件的设置中已启用 “允许托管路由” (Allow Managed Routes / Accept Managed Routes) 或类似选项。不同的操作系统和 ZeroTier 客户端版本，这个选项的名称可能略有不同。</li>
+<li>检查操作系统的路由表，看是否有指向 <code class="notranslate">192.168.31.0/24</code> 的、通过 ZeroTier 的路由。</li>
+<li>尝试重启客户端上的 ZeroTier 服务。</li>
+</ul>
+</li>
+<li>
+<p><strong>在 ZeroTier Central (<code class="notranslate">my.zerotier.com</code>) 上：</strong></p>
+<ul>
+<li><strong>再次确认 Managed Route：</strong> 目标 <code class="notranslate">192.168.31.0/24</code>，下一跳 (Via) 是 OpenWrt 的正确 ZeroTier IP。确保没有笔误。</li>
+<li>确保 OpenWrt 设备和客户端设备都已在该网络中正确授权。</li>
+</ul>
+</li>
+</ol>
+<p><strong>一个临时的诊断方法：</strong> 如果您的 ZeroTier 客户端操作系统允许，可以尝试在客户端上手动添加一条静态路由，指向 <code class="notranslate">192.168.31.0/24</code>，下一跳是 OpenWrt 的 ZeroTier IP。 例如，在 Windows (管理员CMD) 中：<code class="notranslate">route add 192.168.31.0 mask 255.255.255.0 &lt;OpenWrt_ZeroTier_IP&gt;</code> 如果在添加手动路由后 ping 就能通了，那么问题几乎肯定出在 ZeroTier 客户端未能自动从 ZeroTier Central 获取或应用托管路由。</p>
+<p>既然 <code class="notranslate">tcpdump</code> 在 OpenWrt 的 ZT 接口上没有看到目标为 <code class="notranslate">192.168.31.9</code> 的 ping 包，那么 OpenWrt 本身关于防火墙或回复路由的配置暂时不是当前最直接的问题。问题更可能出在“上游”——即 ZeroTier 客户端如何将这个特定目标 IP 的流量导入 ZeroTier 网络。</p>
+<hr>
+<p>最终在手动在客户端上添加了一条静态路由后，解决了问题，已经可以实现客户端ping通OpenWrt所在的区域网，成功组建了虚拟局域网。现在我需要你把上面这些内容整理成一份笔记，后续我想要发布在自己的博客上，算是记录。要求：不是把上面所有步骤简单罗列，而是要又一定的逻辑性和条理性。因为检查了很多次问题，不需要把所有的问题可能放上去，只要把最后添加静态路由这个原因放进去即可。</p>
+<hr>
+<p>显示思路</p>
+<p>Okay, here's a blog post-style note based on your experience, focusing on the core issue and the final solution.</p>
+<hr>
+<h2>成功实现 ZeroTier 访问 OpenWrt 局域网：一个关键的客户端路由配置 📝</h2>
+<p>最近，我着手将我的 OpenWrt 路由器（作为虚拟机运行）接入 ZeroTier 虚拟局域网，目标是让外部 ZeroTier 客户端不仅能访问 OpenWrt 本身，还能访问到与 OpenWrt 处于同一物理局域网（例如 <code class="notranslate">192.168.31.0/24</code>）内的其他设备。虽然过程有些波折，但最终成功了，关键在于一个容易被忽视的客户端路由配置。</p>
+<h3>初始设置与遇到的“怪象” 🤔</h3>
+<p>我在 OpenWrt 上顺利安装并配置了 ZeroTier，OpenWrt 也成功加入了我的 ZeroTier 网络。在 ZeroTier Central（<code class="notranslate">my.zerotier.com</code>）中，我配置了指向 OpenWrt 物理局域网 <code class="notranslate">192.168.31.0/24</code> 的托管路由 (Managed Route)，下一跳 (Via) 指向了 OpenWrt 的 ZeroTier IP 地址。</p>
+<p>然而，测试时出现了一个现象：</p>
+<ul>
+<li>✅ 我的外部 ZeroTier 客户端可以成功 ping 通 OpenWrt 的 ZeroTier IP 地址。</li>
+<li>❌ 但是，该客户端无法 ping 通 OpenWrt 的 LAN IP 地址（例如 <code class="notranslate">192.168.31.9</code>），自然也无法访问该 LAN 网段内的其他设备。</li>
+</ul>
+<p>这表明 ZeroTier 网络本身是通的，OpenWrt 与 ZeroTier 网络也连接正常，但发往 OpenWrt 物理 LAN 的流量似乎“卡”住了。</p>
+<h3>诊断：流量去哪儿了？ pomocí <code class="notranslate">tcpdump</code> 追踪 🕵️‍♂️</h3>
+<p>经过一系列排查，包括检查 OpenWrt 的防火墙规则（确保允许从 ZeroTier 区域到 LAN 区域的转发，以及对 OpenWrt 自身的访问）后，问题依旧。</p>
+<p>转折点出现在使用 <code class="notranslate">tcpdump</code> 工具在 OpenWrt 的 ZeroTier 网络接口上进行抓包。当我尝试从 ZeroTier 客户端 ping OpenWrt 的 LAN IP (<code class="notranslate">192.168.31.9</code>) 时，我在 OpenWrt 的 ZeroTier 接口上执行了类似这样的命令：</p>
+<p>Bash</p>
+<pre class="notranslate"><code class="notranslate">tcpdump -i &lt;OpenWrt_ZeroTier_Interface_Name&gt; -n icmp and dst host &lt;OpenWrt_LAN_IP&gt; and src host &lt;ZeroTier_Client_IP&gt;
+</code></pre>
+<p>结果发现，<strong>竟然没有任何 ICMP Echo Request 数据包到达 OpenWrt 的 ZeroTier 接口！</strong></p>
+<p>这意味着问题并非出在 OpenWrt 如何处理这些数据包（因为它根本没收到），而是 <strong>ZeroTier 客户端没有将发往 <code class="notranslate">192.168.31.9</code> 的数据包正确地通过 ZeroTier 网络发送给 OpenWrt</strong>。</p>
+<h3>解决方案：客户端手动添加静态路由 💡</h3>
+<p>既然问题出在客户端的路由行为上，解决方案也就明朗了：需要在 ZeroTier 客户端上手动添加一条静态路由，告诉它如何到达 OpenWrt 的物理局域网。</p>
+<p><strong>操作步骤（以 Windows 和 Linux 为例）：</strong></p>
+<p>假设：</p>
+<ul>
+<li>OpenWrt 的物理局域网网段是 <code class="notranslate">192.168.31.0/24</code>。</li>
+<li>OpenWrt 在 ZeroTier 网络中的 IP 地址是 <code class="notranslate">&lt;OpenWrt_ZeroTier_IP&gt;</code>。</li>
+</ul>
+<p><strong>在 Windows 客户端上 (以管理员身份运行命令提示符或 PowerShell)：</strong></p>
+<p>DOS</p>
+<pre class="notranslate"><code class="notranslate">route add 192.168.31.0 mask 255.255.255.0 &lt;OpenWrt_ZeroTier_IP&gt;
+</code></pre>
+<p>如果想让路由永久生效 (重启后依然存在)，可以加上 <code class="notranslate">-p</code> 参数：</p>
+<p>DOS</p>
+<pre class="notranslate"><code class="notranslate">route add 192.168.31.0 mask 255.255.255.0 &lt;OpenWrt_ZeroTier_IP&gt; -p
+</code></pre>
+<p><strong>在 Linux 客户端上：</strong></p>
+<p>Bash</p>
+<pre class="notranslate"><code class="notranslate">sudo ip route add 192.168.31.0/24 via &lt;OpenWrt_ZeroTier_IP&gt;
+</code></pre>
+<p>要使此路由永久生效，需要将其添加到网络配置文件中，具体方法因发行版而异（例如修改 <code class="notranslate">/etc/network/interfaces</code>、<code class="notranslate">/etc/netplan/*.yaml</code> 或使用 NetworkManager 的配置）。</p>
+<p><strong>在 macOS 客户端上：</strong></p>
+<p>Bash</p>
+<pre class="notranslate"><code class="notranslate">sudo route add -net 192.168.31.0/24 &lt;OpenWrt_ZeroTier_IP&gt;
+</code></pre>
+<p>添加完这条静态路由后，再次尝试从 ZeroTier 客户端 ping OpenWrt 的 LAN IP (<code class="notranslate">192.168.31.9</code>) 以及该局域网内的其他设备，一切都通了！🎉</p>
+<h3>为何需要手动添加？</h3>
+<p>理论上，ZeroTier Central 的“Managed Routes”功能应该能将这些路由信息推送给客户端。但在某些情况下，客户端可能由于各种原因（例如 ZeroTier 客户端软件自身的设置，如未启用“允许托管路由”/“Allow Managed Routes”；或者操作系统未能正确应用所有推送的路由；或是路由冲突等）没有正确应用这些托管路由。</p>
+<p>手动添加静态路由是一种强制性的、明确的指示，确保客户端操作系统知道将目标为 <code class="notranslate">192.168.31.0/24</code> 的流量发送给 OpenWrt 的 ZeroTier IP，再由 OpenWrt 负责路由到其物理局域网。</p>
+<h3>总结 ✨</h3>
+<p>通过在 ZeroTier 客户端上手动配置指向 OpenWrt 局域网的静态路由，我成功解决了无法从 ZeroTier 访问 OpenWrt LAN 的问题。如果你也遇到类似 ZeroTier 托管路由似乎未按预期工作的情况，检查客户端的路由表并尝试手动添加静态路由，或许就能迎刃而解。这算是一次宝贵的网络排错经验！</p>
+<hr>
+<p>现在有个新问题，在OpenWrt局域网的电脑上能不能直接访问局域网外的zerotier客户端？</p>
+<hr>
+<p>显示思路</p>
+<p>是的，可以让 OpenWrt 局域网内的电脑直接访问局域网外的 ZeroTier 客户端，但这需要进行一些额外的网络配置，因为您的 OpenWrt 是作为<strong>旁路由</strong>使用的。</p>
+<p>当 OpenWrt 是旁路由时，局域网内的电脑（例如 IP 为 <code class="notranslate">192.168.31.100</code>）的默认网关通常是您的主路由器（IP 为 <code class="notranslate">192.168.31.1</code>），而不是 OpenWrt（例如 IP 为 <code class="notranslate">192.168.31.9</code>）。</p>
+<p>因此，要实现从 LAN 访问 ZeroTier 客户端，需要确保数据包能够正确地通过 OpenWrt 路由到 ZeroTier 网络。</p>
+<p>以下是关键步骤和需要考虑的配置：</p>
+<ol>
+<li>
+<p><strong>在您的主路由器上配置静态路由 (最关键的一步)</strong></p>
+<ul>
+<li>这是因为局域网电脑发往 ZeroTier 客户端（例如 <code class="notranslate">192.168.196.X</code>，假设这是您的 ZeroTier 网络段）的数据包会首先到达主路由器 (<code class="notranslate">192.168.31.1</code>)。主路由器需要知道要把这些数据包转发给谁。</li>
+<li>您需要在主路由器（<code class="notranslate">192.168.31.1</code>）的管理界面中添加一条静态路由规则：
+<ul>
+<li><strong>目标网络 (Destination Network/IP Address):</strong> 您的 ZeroTier 网络的 CIDR 地址（例如 <code class="notranslate">192.168.196.0</code>）。</li>
+<li><strong>子网掩码 (Subnet Mask):</strong> 您的 ZeroTier 网络的子网掩码（例如 <code class="notranslate">255.255.255.0</code>，如果您的 ZT 网络是 /24）。</li>
+<li><strong>网关 (Gateway/Next Hop):</strong> 您的 OpenWrt 虚拟机在局域网中的 IP 地址（例如 <code class="notranslate">192.168.31.9</code>）。</li>
+</ul>
+</li>
+<li>这样配置后，当主路由器收到目标地址是 ZeroTier 网络的数据包时，它会将其转发给 OpenWrt 处理。</li>
+</ul>
+</li>
+<li>
+<p><strong>确保 OpenWrt 防火墙允许从 LAN 转发到 ZeroTier 区域</strong></p>
+<ul>
+<li>登录 OpenWrt (LuCI 界面)。</li>
+<li>导航到 <strong>网络 (Network) -&gt; 防火墙 (Firewall)</strong>。</li>
+<li>找到您的 <code class="notranslate">lan</code> 防火墙区域，点击 <strong>编辑 (Edit)</strong>。</li>
+<li>在 <strong>“区域间的转发” (Inter-Zone Forwarding)</strong> 部分：
+<ul>
+<li>确保 <strong>“允许转发到目标区域” (Allow forward to destination zones)</strong> 中包含了您为 ZeroTier 创建的防火墙区域（例如 <code class="notranslate">zt_vpn</code> 或 <code class="notranslate">zerotier</code>）。</li>
+</ul>
+</li>
+<li>或者，您可以编辑 <code class="notranslate">zerotier</code> 区域，确保 <strong>“允许从源区域转发” (Allow forward from source zones)</strong> 中包含了 <code class="notranslate">lan</code> 区域。</li>
+<li>点击 <strong>保存并应用 (Save &amp; Apply)</strong>。</li>
+</ul>
+</li>
+<li>
+<p><strong>OpenWrt 上的路由</strong></p>
+<ul>
+<li>OpenWrt 本身通过其 ZeroTier 接口已经知道如何访问 ZeroTier 网络中的其他客户端，所以这里通常不需要额外配置 OpenWrt 自身的路由表。</li>
+</ul>
+</li>
+<li>
+<p><strong>ZeroTier 客户端的防火墙</strong></p>
+<ul>
+<li>目标 ZeroTier 客户端设备自身的防火墙（例如 Windows 防火墙、Linux 的 iptables/firewalld）需要允许来自您的局域网 IP 地址段 (<code class="notranslate">192.168.31.0/24</code>) 的入站连接，或者至少允许您希望访问的特定端口/服务的连接。</li>
+</ul>
+</li>
+</ol>
+<p><strong>总结一下流程：</strong></p>
+<ol>
+<li>局域网电脑 (<code class="notranslate">192.168.31.100</code>) 尝试访问 ZeroTier 客户端 (<code class="notranslate">192.168.196.X</code>)。</li>
+<li>数据包发送到其默认网关，即主路由器 (<code class="notranslate">192.168.31.1</code>)。</li>
+<li>主路由器根据其静态路由规则，将数据包转发给 OpenWrt 的 LAN IP (<code class="notranslate">192.168.31.9</code>)。</li>
+<li>OpenWrt 收到数据包，其防火墙允许从 <code class="notranslate">lan</code> 区域转发到 <code class="notranslate">zerotier</code> 区域。</li>
+<li>OpenWrt 通过其 ZeroTier 接口将数据包发送到目标 ZeroTier 客户端。</li>
+<li>ZeroTier 客户端收到数据包（如果其防火墙允许）。</li>
+</ol>
+<p><strong>如果无法配置主路由器怎么办？</strong></p>
+<p>如果您的主路由器不支持配置静态路由，或者您没有权限修改它，那么情况会变得复杂一些：</p>
+<ul>
+<li><strong>在每台需要访问 ZeroTier 的局域网电脑上手动添加静态路由：</strong>
+<ul>
+<li>例如，在 Windows 电脑上：<code class="notranslate">route add &lt;ZeroTier_Network_CIDR&gt; mask &lt;ZeroTier_Subnet_Mask&gt; &lt;OpenWrt_LAN_IP&gt;</code></li>
+<li>这种方法管理起来比较麻烦，因为每台电脑都需要单独配置。</li>
+</ul>
+</li>
+<li><strong>更复杂的网络配置（如让 OpenWrt 参与 DHCP 或作为主网关的一部分）：</strong> 这通常会改变您旁路由的初衷，并可能需要更深入的网络知识。</li>
+</ul>
+<p><strong>因此，最理想和最干净的方法是在您的主路由器上添加指向 ZeroTier 网络的静态路由，并由 OpenWrt 作为这条路径上的下一跳。</strong></p>
+<hr></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://zero3129.github.io/Meek3129">Blog Title</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","zero3129/Meek3129");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+</html>
